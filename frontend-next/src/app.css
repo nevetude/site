@@ -1,0 +1,284 @@
+@import 'tailwindcss';
+
+/* Inter Variable, the font of the site, bundled and drawn a little smaller (`size-adjust`). The old site names `Inter`
+   first, but Inter is not installed on the computer it is looked at (measured in that browser: `system-ui` is as wide
+   as Segoe UI), so it is drawn with Segoe UI. Inter is about 8% wider and 9% higher in the small letters than Segoe UI
+   at the same size, and the sizes of the whole site were made for Segoe UI. At 92.6% a line is as long as it was and the
+   small letters are as high; and then the amount of ink of Inter at 400 is the same as of Segoe UI at 400 (measured:
+   matching weight 398, for 600 it is 593), so the weights need no change. 92.6 is the average width of a letter over
+   the real text of the pages (Segoe UI 0.4728 em, Inter 0.5114 em). On another system (macOS draws San Francisco) it
+   has to be measured again: `docs/experiments/font-calibration.html`. Only the sets of letters of the languages of
+   the site; a letter of any other (Chinese, Arabic) is drawn by the system font that follows in `--font-sans`. Files
+   come from `@fontsource-variable/inter`. */
+@font-face {
+	font-family: 'Inter Variable';
+	font-style: normal;
+	font-display: swap;
+	font-weight: 100 900;
+	size-adjust: 92.6%;
+	src: url('@fontsource-variable/inter/files/inter-cyrillic-ext-wght-normal.woff2')
+		format('woff2-variations');
+	unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+
+@font-face {
+	font-family: 'Inter Variable';
+	font-style: normal;
+	font-display: swap;
+	font-weight: 100 900;
+	size-adjust: 92.6%;
+	src: url('@fontsource-variable/inter/files/inter-cyrillic-wght-normal.woff2')
+		format('woff2-variations');
+	unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+
+@font-face {
+	font-family: 'Inter Variable';
+	font-style: normal;
+	font-display: swap;
+	font-weight: 100 900;
+	size-adjust: 92.6%;
+	src: url('@fontsource-variable/inter/files/inter-latin-ext-wght-normal.woff2')
+		format('woff2-variations');
+	unicode-range:
+		U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329,
+		U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F,
+		U+A720-A7FF;
+}
+
+@font-face {
+	font-family: 'Inter Variable';
+	font-style: normal;
+	font-display: swap;
+	font-weight: 100 900;
+	size-adjust: 92.6%;
+	src: url('@fontsource-variable/inter/files/inter-latin-wght-normal.woff2')
+		format('woff2-variations');
+	unicode-range:
+		U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
+		U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* The site is dark only: `<html class="dark">` stays so the `dark:` variants inside the shadcn parts apply. */
+@custom-variant dark (&:is(.dark *));
+
+/* One dark, nearly monochrome theme. Colour is for meaning only (success, warning, destructive).
+   Text has four levels: `foreground` (titles, the main text), `body` (text that is read: a description and the fields
+   of a table, 80% of it), `muted-foreground` (secondary), `subtle` (hints, counters). A link has the colour of the text
+   around it and goes white when the pointer is on it. */
+:root {
+	color-scheme: dark;
+
+	--radius: 0.5rem;
+
+	--background: oklch(0.165 0 0);
+	--foreground: oklch(0.9 0 0);
+	--muted-foreground: oklch(0.9 0 0 / 62%);
+	--subtle: oklch(0.9 0 0 / 42%);
+	--body: oklch(0.9 0 0 / 80%);
+
+	--card: oklch(0.205 0 0);
+	--card-foreground: var(--foreground);
+	--popover: oklch(0.255 0 0);
+	--popover-foreground: var(--foreground);
+	--muted: oklch(0.255 0 0);
+
+	--primary: oklch(0.94 0 0);
+	--primary-foreground: oklch(0.2 0 0);
+	--secondary: oklch(0.255 0 0);
+	--secondary-foreground: var(--foreground);
+	--accent: oklch(1 0 0 / 8%);
+	--accent-foreground: var(--foreground);
+
+	--destructive: oklch(0.68 0.19 25);
+	--success: oklch(0.72 0.15 155);
+	--warning: oklch(0.8 0.14 80);
+
+	--border: oklch(1 0 0 / 8%);
+	--input: oklch(1 0 0 / 16%);
+	--ring: oklch(0.556 0 0);
+	/* The edge of a control that has the focus: a ready light grey, not a share of the white. */
+	--focus: oklch(0.58 0 0);
+}
+
+@theme inline {
+	--font-sans:
+		'Inter Variable', 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto,
+		sans-serif;
+	--font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+
+	--color-background: var(--background);
+	--color-foreground: var(--foreground);
+	--color-muted-foreground: var(--muted-foreground);
+	--color-subtle: var(--subtle);
+	--color-body: var(--body);
+	--color-card: var(--card);
+	--color-card-foreground: var(--card-foreground);
+	--color-popover: var(--popover);
+	--color-popover-foreground: var(--popover-foreground);
+	--color-muted: var(--muted);
+	--color-primary: var(--primary);
+	--color-primary-foreground: var(--primary-foreground);
+	--color-secondary: var(--secondary);
+	--color-secondary-foreground: var(--secondary-foreground);
+	--color-accent: var(--accent);
+	--color-accent-foreground: var(--accent-foreground);
+	--color-destructive: var(--destructive);
+	--color-success: var(--success);
+	--color-warning: var(--warning);
+	--color-border: var(--border);
+	--color-input: var(--input);
+	--color-ring: var(--ring);
+	--color-focus: var(--focus);
+}
+
+/* The sizes of the old site, so the shapes and the scale stay the same. The root is 16px (the size every browser
+   starts with), the old site had 14px, so every length that Tailwind makes of the root is the old one times 0.875: the
+   step of the spacing (so `p-4`, `gap-3`, `size-8` stay as they were), the radii (also Tailwind's own, the shadcn formula
+   would round everything a little more) and the width of `max-w-md`. The text sizes are rounded to a tenth of a rem
+   (`sm` was 12.6px, now 12.8px; the base is exact, 14px, because all the text without a size takes it). The two
+   small ones are a little bigger than Tailwind's, because the smallest texts (chips, captions, table cells) were hard to
+   read on a dark page. */
+@theme {
+	--spacing: 0.21875rem;
+
+	--radius-sm: 0.21875rem;
+	--radius-md: 0.328125rem;
+	--radius-lg: 0.4375rem;
+	--radius-xl: 0.65625rem;
+	--radius-2xl: 0.875rem;
+	--radius-3xl: 1.3125rem;
+	--radius-4xl: 1.75rem;
+
+	--container-md: 24.5rem;
+	--container-page: calc(1240px + 2.625rem);
+
+	--text-xs: 0.7rem;
+	--text-sm: 0.8rem;
+	--text-base: 0.875rem;
+	--text-lg: 1rem;
+	--text-2xl: 1.3rem;
+	--text-3xl: 1.6rem;
+
+	/* The bars on the picture of the clip that is playing: each one rises and falls on its own time. The height is
+	   what changes (not a scale), so the ends of a bar stay round. */
+	--animate-equalizer: equalizer 1s ease-in-out infinite;
+	/* A menu or a window appears: it fades in and grows a little. */
+	--animate-pop: pop 100ms ease-out;
+
+	@keyframes pop {
+		from {
+			opacity: 0;
+			transform: scale(0.97);
+		}
+	}
+
+	@keyframes equalizer {
+		0%,
+		100% {
+			height: 25%;
+		}
+
+		50% {
+			height: 100%;
+		}
+	}
+}
+
+@layer base {
+	* {
+		@apply border-border outline-ring/50;
+	}
+
+	html {
+		@apply font-sans;
+		/* The size every browser starts with: a visitor who sets another size in the browser gets the whole site scaled. */
+		font-size: 16px;
+		/* A page that grows past the screen must not shift to the left. */
+		scrollbar-gutter: stable;
+	}
+
+	body {
+		@apply min-h-dvh bg-background text-base text-foreground;
+	}
+}
+
+/* A box with a bite out of its top right corner (square unless a card asks for a wider one). Rounded: the inner
+   corner of the bite and the corner where it meets the top edge (the one where it meets the right edge stays square).
+   A mask, because `corner-shape` can round the inner corner only. The mask is the sum of the parts that stay: the
+   left part, the part under the bite, the part that makes the rounded top corner, and the piece that rounds the
+   inner corner. `--n` is the width of the bite and `--nh` its height (both 27px unless `--bite-w` and `--bite-h` are
+   set on the card), `--ri` and `--rc` the radii of the two rounded corners. */
+@utility notched-right {
+	--n: var(--bite-w, 27px);
+	--nh: var(--bite-h, 27px);
+	--ri: 6px;
+	--rc: 6px;
+	mask-repeat: no-repeat;
+	mask-image:
+		linear-gradient(#000 0 0), linear-gradient(#000 0 0),
+		radial-gradient(closest-side, #000 calc(100% - 0.5px), transparent), linear-gradient(#000 0 0),
+		radial-gradient(circle at 100% 0, transparent calc(var(--ri) - 0.5px), #000 var(--ri));
+	mask-size:
+		/* 1px more than the left part needs: at a fractional width the edges of two touching parts do not meet, and a hairline of the page shows between them */
+		calc(100% - var(--n) - var(--rc) + 1px) 100%,
+		var(--rc) calc(100% - var(--rc)),
+		calc(var(--rc) * 2) calc(var(--rc) * 2),
+		100% calc(100% - var(--nh)),
+		var(--ri) var(--ri);
+	mask-position:
+		left top,
+		right var(--n) top var(--rc),
+		right var(--n) top 0,
+		left bottom,
+		right calc(var(--n) - var(--ri)) top calc(var(--nh) - var(--ri));
+}
+
+/* A modal window holds the page still. */
+html:has(dialog[open]) {
+	overflow: hidden;
+}
+
+/* Everything that opens over the page (the list of a select, the results of a search, the calendar) looks the same: a
+   soft panel with a little room inside, rows that are rounded themselves, so every corner is round, and a thin
+   scrollbar. A list has a fixed height (18 steps) and scrolls. */
+@utility popup {
+	position: fixed;
+	inset: auto;
+	margin: 0;
+	border: 0;
+	padding: calc(var(--spacing) * 1);
+	border-radius: var(--radius-lg);
+	background: var(--popover);
+	color: var(--popover-foreground);
+	box-shadow: 0 8px 24px oklch(0 0 0 / 35%);
+	animation: var(--animate-pop);
+	max-height: calc(var(--spacing) * 72);
+	overflow-x: hidden;
+	overflow-y: auto;
+	scrollbar-width: thin;
+	scrollbar-color: oklch(1 0 0 / 20%) transparent;
+}
+
+/* A release is carried in the edit mode of an artist (`ReleaseDrag`): the hand is closed everywhere, nothing is selected. */
+html.dragging,
+html.dragging * {
+	cursor: grabbing !important;
+	user-select: none;
+}
+
+/* Every link brightens to white when the pointer is on it, smoothly. Outside of any layer, so that it also wins over
+   the colour classes of the links. Not for a link that looks like a button (`Button` with `href`): its colours are its
+   own. A link that moves something else (the album card) sets its own transition inline. A name with the tint of the
+   cover (`data-tint`) inside a hovered link goes white with the rest. */
+a:not([data-slot='button']) {
+	transition: color 150ms ease-out;
+}
+
+a:not([data-slot='button']):hover {
+	color: white;
+}
+
+a:not([data-slot='button']):hover [data-tint] {
+	color: inherit;
+}

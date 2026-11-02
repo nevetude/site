@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Font calibration (experiment)</title>
+<style>
+	/* The web font of the new site: Inter Variable, the same file. */
+	@font-face {
+		font-family: 'Inter Web';
+		src: url('/font-test/inter-latin-wght-normal.woff2') format('woff2-variations');
+		font-weight: 100 900;
+	}
+	body { background: #111; color: #e6e6e6; font: 14px system-ui, sans-serif; padding: 28px; max-width: 980px; }
+	h1 { font-size: 18px; margin: 0 0 4px; }
+	p.note { color: #999; margin: 0 0 18px; }
+	pre { background: #1b1b1b; padding: 14px; border-radius: 8px; line-height: 1.55; white-space: pre-wrap; }
+	.row { display: grid; grid-template-columns: 230px 1fr; gap: 12px; padding: 7px 0; border-top: 1px solid #2a2a2a; align-items: baseline; }
+	.label { color: #8a8a8a; font: 12px system-ui, sans-serif; }
+	.sample { font-size: 14px; }
+	textarea { width: 100%; height: 150px; background: #1b1b1b; color: #e6e6e6; border: 1px solid #333; border-radius: 8px; padding: 10px; font: 12px ui-monospace, monospace; }
+</style>
+</head>
+<body>
+<h1>Font calibration (copy into frontend-next/static/ and the woff2 into static/font-test/, open it, delete both afterwards)</h1>
+<p class="note">Compares the Inter installed on this computer with Inter Variable of the new site, in this browser. Wait a second, then copy the box at the bottom.</p>
+<pre id="out">measuring…</pre>
+<div id="samples"></div>
+<p class="note" style="margin-top:18px">Copy this and send it:</p>
+<textarea id="json" readonly></textarea>
+
+<script>
+(async () => {
+	await document.fonts.load('400 14px "Inter Web"');
+	await document.fonts.ready;
+
+	const TEXT = 'Interscope Records, pgLang · Sounwave, Jack Antonoff · Executive Producer · Phonographic Copyright · 22 Nov 2024';
+	const canvas = document.createElement('canvas');
+	const ctx = canvas.getContext('2d', { willReadFrequently: true });
+
+	const advance = (font, text = TEXT) => { ctx.font = font; return ctx.measureText(text).width; };
+	const probe = (name) => {
+		const w = (f) => { ctx.font = `72px ${f}`; return ctx.measureText('mmmmmmmmmmlli').width; };
+		return w(`"${name}", monospace`) !== w('monospace') || w(`"${name}", serif`) !== w('serif');
+	};
+	const metrics = (font) => { ctx.font = font; const x = ctx.measureText('x'), H = ctx.measureText('H'); return { x: x.actualBoundingBoxAscent, cap: H.actualBoundingBoxAscent }; };
+	// the amount of ink of a text drawn at `size` px: the sum of the coverage of all the pixels
+	const ink = (family, weight, size) => {
+		const scale = 4; // a large raster, so that the sum is exact enough
+		canvas.width = 1400 * scale; canvas.height = 40 * scale;
+		ctx.setTransform(scale, 0, 0, scale, 0, 0);
+		ctx.fillStyle = '#000'; ctx.fillRect(0, 0, 1400, 40);
+		ctx.fillStyle = '#fff'; ctx.font = `${weight} ${size}px ${family}`; ctx.textBaseline = 'alphabetic';
+		ctx.fillText(TEXT, 4, 26);
+		const d = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+		let s = 0; for (let i = 0; i < d.length; i += 4) s += d[i];
+		return s / 255 / (scale * scale);
+	};
+
+	const hasInter = probe('Inter');
+	const hasSegoe = probe('Segoe UI');
+	const hasRoboto = probe('Roboto');
+	const web14 = advance('400 14px "Inter Web"');
+	const r = {
+		browser: navigator.userAgent.replace(/^Mozilla\/5.0 /, '').slice(0, 70),
+		'Inter installed on this computer': hasInter,
+		'Segoe UI installed': hasSegoe,
+		'Roboto installed': hasRoboto,
+		'text width at 14px, Inter Variable (new site)': +web14.toFixed(2)
+	};
+	let calibration = null;
+	// The font the old site is drawn with: the installed Inter, or else what `system-ui` is here (Segoe UI on Windows).
+	const REF = hasInter ? '"Inter", monospace' : 'system-ui';
+	const refName = hasInter ? 'installed Inter' : (hasSegoe ? 'Segoe UI' : 'system-ui');
+	{
+		const ref14 = advance(`400 14px ${REF}`);
+		const scale = ref14 / web14;
+		const mRef = metrics(`400 100px ${REF}`), mWeb = metrics('400 100px "Inter Web"');
+		r[`reference font (old site)`] = refName;
+		r[`text width at 14px, ${refName}`] = +ref14.toFixed(2);
+		r['widths: reference / Inter Variable'] = +scale.toFixed(4);
+		r['x-height 100px: reference, Inter Variable'] = `${mRef.x.toFixed(1)}, ${mWeb.x.toFixed(1)}`;
+		r['cap height 100px: reference, Inter Variable'] = `${mRef.cap.toFixed(1)}, ${mWeb.cap.toFixed(1)}`;
+		// for a weight of the reference: the weight of Inter Variable that puts as much ink on the page at the size that gives the same width
+		const solve = (refWeight) => {
+			const target = ink(REF, refWeight, 14);
+			const at = (w) => ink('"Inter Web"', w, 14 * scale);
+			let lo = 200, hi = 900;
+			for (let i = 0; i < 16; i++) { const mid = (lo + hi) / 2; if (at(mid) > target) hi = mid; else lo = mid; }
+			return { target: +target.toFixed(1), inter400: +at(400).toFixed(1), weight: Math.round((lo + hi) / 2) };
+		};
+		const weights = {};
+		for (const w of [400, 600, 700]) {
+			const x = solve(w);
+			weights[w] = x.weight;
+			r[`ink ${refName} ${w} / Inter Variable 400 / matching weight`] = `${x.target} / ${x.inter400} / ${x.weight}`;
+		}
+		calibration = { sizeAdjustPercent: +(scale * 100).toFixed(1), matchingWeights: weights };
+		r['=> size-adjust'] = `${calibration.sizeAdjustPercent}%`;
+		r['=> Inter Variable weights that look like 400 / 600 / 700'] = `${weights[400]} / ${weights[600]} / ${weights[700]}`;
+	}
+	document.getElementById('out').textContent = Object.entries(r).map(([k, v]) => `${k}: ${v}`).join('\n');
+	document.getElementById('json').value = JSON.stringify({ ...r, calibration }, null, 1);
+
+	// the same line, drawn by the page
+	const rows = [[`${refName} (old site)`, REF, 400, 14], [`${refName} 600`, REF, 600, 14]];
+	rows.push(['Inter Variable 400 (new site now)', '"Inter Web"', 400, 14], ['Inter Variable 600', '"Inter Web"', 600, 14]);
+	rows.push([`Inter Variable ${calibration.matchingWeights[400]}, size ${calibration.sizeAdjustPercent}%`, '"Inter Web"', calibration.matchingWeights[400], 14 * calibration.sizeAdjustPercent / 100]);
+	rows.push([`Inter Variable ${calibration.matchingWeights[600]}, size ${calibration.sizeAdjustPercent}% (for 600)`, '"Inter Web"', calibration.matchingWeights[600], 14 * calibration.sizeAdjustPercent / 100]);
+	document.getElementById('samples').innerHTML = rows.map(([label, family, weight, size]) =>
+		`<div class="row"><div class="label">${label}</div><div class="sample" style="font-family:${family};font-weight:${weight};font-size:${size}px">${TEXT}</div></div>`).join('');
+})();
+</script>
+</body>
+</html>

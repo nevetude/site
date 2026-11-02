@@ -1,0 +1,40 @@
+import type { AlbumVideo, CreditGroup, SongDetail } from '#lib/api/client.js';
+
+const OF = {
+	samples: 'Samples',
+	interpolates: 'Interpolates',
+	cover_of: 'Cover of',
+	remix_of: 'Remix of',
+	live_version_of: 'Live version of',
+	translation_of: 'Translation of'
+} as const;
+
+const PLURAL = {
+	samples: 'Sampled in',
+	interpolates: 'Interpolated in',
+	cover_of: 'Covers',
+	remix_of: 'Remixes',
+	live_version_of: 'Live versions',
+	translation_of: 'Translations'
+} as const;
+
+/** "Remix of" when this song is the remix, "Remixes" when the others are. */
+export const songRelationTitle = ({ type, inverse }: { type: keyof typeof OF; inverse: boolean }) =>
+	(inverse ? PLURAL : OF)[type];
+
+export const songVideos = (song: SongDetail): AlbumVideo[] =>
+	song.videos.map((video) => ({
+		...video,
+		song_id: song.id,
+		song_name: song.base_name,
+		release_date: song.release_date,
+		release_date_precision: song.release_date_precision
+	}));
+
+/** The credits of a song in the shape of the credits of an album (`Credits`). */
+export const songCredits = (song: SongDetail): CreditGroup[] =>
+	song.credits.map(({ role, artists }) => ({
+		role,
+		from_album: false,
+		artists: artists.map((artist) => ({ artist, tracks: null }))
+	}));

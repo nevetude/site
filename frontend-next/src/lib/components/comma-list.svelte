@@ -1,0 +1,17 @@
+<script lang="ts">
+	// Names in running text: grey commas, and a name never breaks across two lines (the line may break after a
+	// comma). `wrap` false: the list stays on one line (its parent cuts it with "…"), no break after a comma.
+	// `tinted[i]`: the name gets the tint of the artists of the album (`--artist-color`); inside a link that is hovered
+	// it goes white with the rest (`[data-tint]` in `app.css`).
+	let {
+		items,
+		wrap = true,
+		tinted
+	}: { items: string[]; wrap?: boolean; tinted?: boolean[] } = $props();
+</script>
+
+{#each items as item, i (i)}{#if i}<span class="mr-[0.3em] text-subtle">,</span>{#if wrap}<wbr
+			/>{/if}{/if}<span
+		class="whitespace-nowrap {tinted?.[i] ? 'text-(--artist-color)' : ''}"
+		data-tint={tinted?.[i] ? '' : undefined}>{item}</span
+	>{/each}
